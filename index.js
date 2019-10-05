@@ -1,22 +1,34 @@
-const Express = require('express');
-const App = Express();
-const BodyParser = require('body-parser');
-const PORT = process.env.PORT || 8080;
+const express = require('express');
+const path = require('path');
+const generatePassword = require('password-generator');
 
-// Express Configuration
-App.use(BodyParser.urlencoded({ extended: false }));
-App.use(Express.static('public'));
+const app = express();
 
-// Sample GET route
-App.get('/api/data', (req, res) => res.json({
-  message: "Seems to work!",
-}));
+// Serve static files from the React app
+app.use(express.static(path.join(__dirname, 'client/build')));
 
-App.get('/', (req, res) => {
-  res.send('Hello World!')
+// Put all API endpoints under '/api'
+app.get('/api/passwords', (req, res) => {
+  const count = 5;
+
+  // Generate some passwords
+  const passwords = Array.from(Array(count).keys()).map(i =>
+    generatePassword(12, false)
+  )
+
+  // Return them as json
+  res.json(passwords);
+
+  console.log(`Sent ${count} passwords`);
 });
 
-App.listen(PORT, () => {
-  // eslint-disable-next-line no-console
-  console.log(`Express seems to be listening on port ${PORT} so that's pretty good 👍`);
+// The "catchall" handler: for any request that doesn't
+// match one above, send back React's index.html file.
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname+'/client/build/index.html'));
 });
+
+const port = process.env.PORT || 5000;
+app.listen(port);
+
+console.log(`Password generator listening on ${port}`);
